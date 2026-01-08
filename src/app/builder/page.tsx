@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
 
 export default function BuilderPage() {
-  redirect('/builder/new')
+  redirect('/builder/professional')
 }

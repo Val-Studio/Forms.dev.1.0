@@ -243,14 +243,291 @@ export function TestPageClient({ form }: TestPageClientProps) {
                   </div>
                 )}
 
-                {/* Text Input */}
-                {currentQuestion.type === 'text' && (
+                {/* Text Input (short_text, long_text, text) */}
+                {(currentQuestion.type === 'text' ||
+                  currentQuestion.type === 'short_text' ||
+                  currentQuestion.type === 'long_text') && (
                   <textarea
-                    className="w-full min-h-[120px] p-4 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/30 focus:outline-none focus:ring-2 focus:ring-mindflow-teal/50"
+                    className={`w-full p-4 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/30 focus:outline-none focus:ring-2 focus:ring-mindflow-teal/50 ${
+                      currentQuestion.type === 'short_text' ? 'min-h-[60px]' : 'min-h-[120px]'
+                    }`}
                     placeholder="Введіть вашу відповідь..."
                     value={answers[currentQuestion.id]?.text || ''}
                     onChange={(e) => handleAnswer({ text: e.target.value })}
                   />
+                )}
+
+                {/* Multiple Choice */}
+                {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
+                  <div className="space-y-3">
+                    {currentQuestion.options.map((option: any) => {
+                      const selected = answers[currentQuestion.id]?.optionIds || []
+                      const isSelected = selected.includes(option.id)
+                      return (
+                        <button
+                          key={option.id}
+                          onClick={() => {
+                            const current = answers[currentQuestion.id]?.optionIds || []
+                            const newSelection = isSelected
+                              ? current.filter((id: string) => id !== option.id)
+                              : [...current, option.id]
+                            handleAnswer({ optionIds: newSelection })
+                          }}
+                          className={`w-full p-4 rounded-2xl text-left transition-all ${
+                            isSelected
+                              ? 'bg-gradient-primary text-white shadow-soft'
+                              : 'bg-white/40 hover:bg-white/60'
+                          }`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
+                                isSelected ? 'border-white bg-white/20' : 'border-mindflow-slate/30'
+                              }`}
+                            >
+                              {isSelected && <span>✓</span>}
+                            </div>
+                            <span className="font-medium">{option.text}</span>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* Dropdown */}
+                {currentQuestion.type === 'dropdown' && currentQuestion.options && (
+                  <select
+                    className="w-full p-4 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/30 focus:outline-none focus:ring-2 focus:ring-mindflow-teal/50"
+                    value={answers[currentQuestion.id]?.optionId || ''}
+                    onChange={(e) => handleAnswer({ optionId: e.target.value })}
+                  >
+                    <option value="">Виберіть варіант...</option>
+                    {currentQuestion.options.map((option: any) => (
+                      <option key={option.id} value={option.id}>
+                        {option.text}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {/* Date */}
+                {currentQuestion.type === 'date' && (
+                  <input
+                    type="date"
+                    className="w-full p-4 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/30 focus:outline-none focus:ring-2 focus:ring-mindflow-teal/50"
+                    value={answers[currentQuestion.id]?.date || ''}
+                    onChange={(e) => handleAnswer({ date: e.target.value })}
+                  />
+                )}
+
+                {/* Slider */}
+                {currentQuestion.type === 'slider' && (
+                  <div className="space-y-4">
+                    <input
+                      type="range"
+                      min={currentQuestion.settings?.min || 0}
+                      max={currentQuestion.settings?.max || 10}
+                      step={currentQuestion.settings?.step || 1}
+                      value={answers[currentQuestion.id]?.value || currentQuestion.settings?.min || 0}
+                      onChange={(e) => handleAnswer({ value: Number(e.target.value) })}
+                      className="w-full h-2 bg-white/40 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="text-center text-2xl font-bold">
+                      {answers[currentQuestion.id]?.value || currentQuestion.settings?.min || 0}
+                    </div>
+                  </div>
+                )}
+
+                {/* Matrix */}
+                {currentQuestion.type === 'matrix' &&
+                  currentQuestion.settings?.rows &&
+                  currentQuestion.settings?.columns && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr>
+                            <th className="p-2"></th>
+                            {currentQuestion.settings.columns.map((col: string, i: number) => (
+                              <th key={i} className="p-2 text-sm font-medium">
+                                {col}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {currentQuestion.settings.rows.map((row: string, rowIndex: number) => (
+                            <tr key={rowIndex}>
+                              <td className="p-2 text-sm font-medium">{row}</td>
+                              {currentQuestion.settings.columns.map((_: string, colIndex: number) => {
+                                const cellKey = `${rowIndex}-${colIndex}`
+                                const matrixAnswers = answers[currentQuestion.id]?.matrix || {}
+                                return (
+                                  <td key={colIndex} className="p-2 text-center">
+                                    <input
+                                      type="radio"
+                                      name={`matrix-${rowIndex}`}
+                                      checked={matrixAnswers[rowIndex] === colIndex}
+                                      onChange={() => {
+                                        const newMatrix = { ...matrixAnswers, [rowIndex]: colIndex }
+                                        handleAnswer({ matrix: newMatrix })
+                                      }}
+                                      className="w-5 h-5 cursor-pointer"
+                                    />
+                                  </td>
+                                )
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                {/* Semantic Differential */}
+                {currentQuestion.type === 'semantic_differential' && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-sm font-medium mb-2">
+                      <span>{currentQuestion.settings?.leftLabel || 'Негативно'}</span>
+                      <span>{currentQuestion.settings?.rightLabel || 'Позитивно'}</span>
+                    </div>
+                    <div className="flex justify-between items-center gap-2">
+                      {Array.from({ length: currentQuestion.settings?.steps || 7 }).map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleAnswer({ value: i })}
+                          className={`flex-1 h-12 rounded-xl transition-all ${
+                            answers[currentQuestion.id]?.value === i
+                              ? 'bg-gradient-primary text-white shadow-soft'
+                              : 'bg-white/40 hover:bg-white/60'
+                          }`}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Ranking */}
+                {currentQuestion.type === 'ranking' && currentQuestion.options && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-mindflow-slate mb-3">
+                      Перетягніть для сортування від найважливішого до найменш важливого
+                    </p>
+                    {(answers[currentQuestion.id]?.ranking || currentQuestion.options).map(
+                      (option: any, index: number) => (
+                        <div
+                          key={option.id}
+                          className="flex items-center gap-3 p-4 bg-white/40 rounded-2xl"
+                        >
+                          <span className="text-2xl font-bold text-mindflow-teal">
+                            {index + 1}
+                          </span>
+                          <span className="flex-1">{option.text}</span>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+
+                {/* File Upload */}
+                {currentQuestion.type === 'file_upload' && (
+                  <div>
+                    <input
+                      type="file"
+                      accept={currentQuestion.settings?.allowedTypes?.join(',') || '*'}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          handleAnswer({ file: file.name, fileSize: file.size })
+                        }
+                      }}
+                      className="w-full p-4 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/30"
+                    />
+                    {currentQuestion.settings?.maxSize && (
+                      <p className="text-xs text-mindflow-slate mt-2">
+                        Максимальний розмір: {currentQuestion.settings.maxSize} MB
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Image Selection */}
+                {currentQuestion.type === 'image_selection' && currentQuestion.options && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {currentQuestion.options.map((option: any) => (
+                      <button
+                        key={option.id}
+                        onClick={() => handleAnswer({ optionId: option.id })}
+                        className={`p-4 rounded-2xl transition-all ${
+                          answers[currentQuestion.id]?.optionId === option.id
+                            ? 'ring-4 ring-mindflow-teal'
+                            : 'hover:ring-2 ring-white/40'
+                        }`}
+                      >
+                        <div className="aspect-square bg-white/60 rounded-xl mb-2 flex items-center justify-center text-4xl">
+                          {option.emoji || '🖼️'}
+                        </div>
+                        <p className="text-sm text-center">{option.text}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Info Block */}
+                {currentQuestion.type === 'info_block' && (
+                  <div className="p-6 bg-blue-50 rounded-2xl">
+                    <p className="text-mindflow-navy whitespace-pre-wrap">
+                      {currentQuestion.description || currentQuestion.title}
+                    </p>
+                  </div>
+                )}
+
+                {/* Consent Form */}
+                {currentQuestion.type === 'consent_form' && (
+                  <div className="space-y-4">
+                    <div className="p-6 bg-white/60 rounded-2xl max-h-64 overflow-y-auto">
+                      <p className="text-sm whitespace-pre-wrap">
+                        {currentQuestion.description || 'Текст згоди'}
+                      </p>
+                    </div>
+                    <label className="flex items-center gap-3 p-4 bg-white/40 rounded-2xl cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={answers[currentQuestion.id]?.consent || false}
+                        onChange={(e) => handleAnswer({ consent: e.target.checked })}
+                        className="w-5 h-5"
+                      />
+                      <span className="font-medium">Я погоджуюсь з умовами</span>
+                    </label>
+                  </div>
+                )}
+
+                {/* Timed Question */}
+                {currentQuestion.type === 'timed_question' && currentQuestion.options && (
+                  <div className="space-y-4">
+                    <div className="text-center mb-4">
+                      <div className="inline-block px-4 py-2 bg-orange-100 text-orange-700 rounded-full font-semibold">
+                        ⏱️ {currentQuestion.settings?.timeLimit || 30} секунд
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      {currentQuestion.options.map((option: any) => (
+                        <button
+                          key={option.id}
+                          onClick={() => handleAnswer({ optionId: option.id })}
+                          className={`w-full p-4 rounded-2xl text-left transition-all ${
+                            answers[currentQuestion.id]?.optionId === option.id
+                              ? 'bg-gradient-primary text-white shadow-soft'
+                              : 'bg-white/40 hover:bg-white/60'
+                          }`}
+                        >
+                          {option.text}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </GlassCard>
             </motion.div>
