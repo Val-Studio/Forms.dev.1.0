@@ -1,15 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 import { getFormSubmissions, getFormById } from '@/app/actions/forms'
 
-export default function FormResultsPage() {
-  const params = useParams()
-  const formId = params.id as string
+export default function FormResultsPage({ params }: { params: { id: string } }) {
+  const formId = params.id
   const [form, setForm] = useState<any>(null)
   const [submissions, setSubmissions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)

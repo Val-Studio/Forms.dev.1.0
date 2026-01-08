@@ -4,6 +4,9 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
 
+// Disable static generation for dynamic route
+export const dynamic = 'force-dynamic'
+
 export default async function TestPage({ params }: { params: { id: string } }) {
   const form = await getPublicForm(params.id)
 

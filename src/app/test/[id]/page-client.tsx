@@ -5,6 +5,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { Button } from '@/components/ui/Button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { submitTestAnswers } from '@/app/actions/forms'
+import { cn } from '@/lib/utils'
 
 interface TestPageClientProps {
   form: any
@@ -105,9 +106,16 @@ export function TestPageClient({ form }: TestPageClientProps) {
                       {result.interpretations && result.interpretations[scale.id] && (
                         <div className="mt-3">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium inline-block bg-${
-                              result.interpretations[scale.id].color
-                            }-100 text-${result.interpretations[scale.id].color}-700`}
+                            className={cn(
+                              'px-3 py-1 rounded-full text-xs font-medium inline-block',
+                              {
+                                'bg-green-100 text-green-700': result.interpretations[scale.id].color === 'green',
+                                'bg-yellow-100 text-yellow-700': result.interpretations[scale.id].color === 'yellow',
+                                'bg-orange-100 text-orange-700': result.interpretations[scale.id].color === 'orange',
+                                'bg-red-100 text-red-700': result.interpretations[scale.id].color === 'red',
+                                'bg-blue-100 text-blue-700': result.interpretations[scale.id].color === 'blue',
+                              }
+                            )}
                           >
                             {result.interpretations[scale.id].label}
                           </span>

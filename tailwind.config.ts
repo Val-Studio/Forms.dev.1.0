@@ -54,6 +54,9 @@ const config: Config = {
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
       },
+      willChange: {
+        'transform-opacity': 'transform, opacity',
+      },
     },
   },
   plugins: [],

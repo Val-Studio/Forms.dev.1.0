@@ -41,8 +41,8 @@ function SortableQuestion({ question, isSelected, onSelect, onDelete }: any) {
   }
 
   const questionType = Object.values(QUESTION_CATEGORIES)
-    .flatMap((cat) => cat.types)
-    .find((t) => t.type === question.type)
+    .flatMap((cat) => cat.types as unknown as any[])
+    .find((t: any) => t.type === question.type)
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
@@ -202,7 +202,7 @@ export default function ProfessionalBuilderPage() {
         })),
       }
 
-      const result = await createForm(getCurrentUserId(), formData)
+      const result = await createForm(getCurrentUserId(), formData as any)
 
       if (result.success) {
         alert('✅ Тест успішно збережено!')
@@ -887,7 +887,7 @@ export default function ProfessionalBuilderPage() {
                               value={interp.color}
                               onChange={(e) => {
                                 const newInterps = [...(selectedScale.interpretations || [])]
-                                newInterps[index].color = e.target.value
+                                newInterps[index].color = e.target.value as 'green' | 'yellow' | 'orange' | 'red' | 'blue'
                                 updateScoringScale(selectedScale.id, { interpretations: newInterps })
                               }}
                               className="w-full text-sm p-2 rounded-lg bg-white/60 border border-white/30"
@@ -920,7 +920,7 @@ export default function ProfessionalBuilderPage() {
                             min: 0,
                             max: 100,
                             label: '',
-                            color: 'green',
+                            color: 'green' as 'green' | 'yellow' | 'orange' | 'red' | 'blue',
                           }
                           updateScoringScale(selectedScale.id, {
                             interpretations: [...(selectedScale.interpretations || []), newInterp],

@@ -19,7 +19,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           className={cn(
-            'input-glass',
+            'w-full px-4 py-3 rounded-2xl min-h-[44px]',
+            'bg-white/40 backdrop-blur-xl border border-white/30',
+            'text-mindflow-navy placeholder:text-mindflow-slate/60',
+            'transition-all duration-200 ease-out',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-mindflow-teal/50 focus:bg-white/60',
             error && 'ring-2 ring-red-500/50 border-red-500/30',
             className
           )}
