@@ -343,30 +343,63 @@ export function TestPageClient({ form }: TestPageClientProps) {
                 {currentQuestion.type === 'matrix' &&
                   currentQuestion.settings?.rows &&
                   currentQuestion.settings?.columns && (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr>
-                            <th className="p-2"></th>
-                            {currentQuestion.settings.columns.map((col: string, i: number) => (
-                              <th key={i} className="p-2 text-sm font-medium">
-                                {col}
-                              </th>
+                    <>
+                      {/* Desktop: Table view */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr>
+                              <th className="p-2"></th>
+                              {currentQuestion.settings.columns.map((col: string, i: number) => (
+                                <th key={i} className="p-2 text-sm font-medium">
+                                  {col}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {currentQuestion.settings.rows.map((row: string, rowIndex: number) => (
+                              <tr key={rowIndex}>
+                                <td className="p-2 text-sm font-medium">{row}</td>
+                                {currentQuestion.settings.columns.map((_: string, colIndex: number) => {
+                                  const matrixAnswers = answers[currentQuestion.id]?.matrix || {}
+                                  return (
+                                    <td key={colIndex} className="p-2 text-center">
+                                      <input
+                                        type="radio"
+                                        name={`matrix-${rowIndex}`}
+                                        checked={matrixAnswers[rowIndex] === colIndex}
+                                        onChange={() => {
+                                          const newMatrix = { ...matrixAnswers, [rowIndex]: colIndex }
+                                          handleAnswer({ matrix: newMatrix })
+                                        }}
+                                        className="w-5 h-5 cursor-pointer"
+                                      />
+                                    </td>
+                                  )
+                                })}
+                              </tr>
                             ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {currentQuestion.settings.rows.map((row: string, rowIndex: number) => (
-                            <tr key={rowIndex}>
-                              <td className="p-2 text-sm font-medium">{row}</td>
-                              {currentQuestion.settings.columns.map((_: string, colIndex: number) => {
-                                const cellKey = `${rowIndex}-${colIndex}`
-                                const matrixAnswers = answers[currentQuestion.id]?.matrix || {}
-                                return (
-                                  <td key={colIndex} className="p-2 text-center">
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Mobile: Card view */}
+                      <div className="md:hidden space-y-4">
+                        {currentQuestion.settings.rows.map((row: string, rowIndex: number) => {
+                          const matrixAnswers = answers[currentQuestion.id]?.matrix || {}
+                          return (
+                            <div key={rowIndex} className="p-4 bg-white/60 rounded-2xl space-y-3">
+                              <p className="font-medium text-sm">{row}</p>
+                              <div className="space-y-2">
+                                {currentQuestion.settings.columns.map((col: string, colIndex: number) => (
+                                  <label
+                                    key={colIndex}
+                                    className="flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-white/40 transition-colors"
+                                  >
                                     <input
                                       type="radio"
-                                      name={`matrix-${rowIndex}`}
+                                      name={`matrix-mobile-${rowIndex}`}
                                       checked={matrixAnswers[rowIndex] === colIndex}
                                       onChange={() => {
                                         const newMatrix = { ...matrixAnswers, [rowIndex]: colIndex }
@@ -374,14 +407,15 @@ export function TestPageClient({ form }: TestPageClientProps) {
                                       }}
                                       className="w-5 h-5 cursor-pointer"
                                     />
-                                  </td>
-                                )
-                              })}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                                    <span className="text-sm">{col}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </>
                   )}
 
                 {/* Semantic Differential */}

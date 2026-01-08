@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { AIImportModal } from '@/components/AIImportModal'
+import { BulkEditScoresModal } from '@/components/BulkEditScoresModal'
 import { QUESTION_CATEGORIES, type QuestionType } from '@/lib/schemas'
 import { createForm } from '@/app/actions/forms'
 import { getCurrentUserId } from '@/lib/mock-user'
+import { validateLogicJumps } from '@/lib/logicValidator'
 import {
   DndContext,
   closestCenter,
@@ -88,6 +90,7 @@ function SortableQuestion({ question, isSelected, onSelect, onDelete }: any) {
 export default function ProfessionalBuilderPage() {
   const router = useRouter()
   const [isAIModalOpen, setIsAIModalOpen] = useState(false)
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const {
@@ -145,6 +148,25 @@ export default function ProfessionalBuilderPage() {
     if (questions.length === 0) {
       alert('Додайте хоча б одне питання')
       return
+    }
+
+    // Валідація Logic Jumps
+    if (logicJumps.length > 0) {
+      const validation = validateLogicJumps(questions, logicJumps)
+
+      if (!validation.isValid) {
+        const errorMsg = validation.errors.map((e) => `❌ ${e.message}`).join('\n')
+        alert(`Помилки в умовних переходах:\n\n${errorMsg}\n\nВиправте їх перед збереженням.`)
+        return
+      }
+
+      if (validation.warnings.length > 0) {
+        const warningMsg = validation.warnings.map((w) => `⚠️ ${w.message}`).join('\n')
+        const confirmed = confirm(
+          `Виявлено попередження:\n\n${warningMsg}\n\nПродовжити збереження?`
+        )
+        if (!confirmed) return
+      }
     }
 
     setSaving(true)
@@ -618,7 +640,16 @@ export default function ProfessionalBuilderPage() {
                       selectedQuestion.options &&
                       selectedQuestion.options.length > 0 && (
                         <div className="pt-4 border-t border-white/20">
-                          <h4 className="font-semibold mb-2 text-sm">📊 Підрахунок балів</h4>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold text-sm">📊 Підрахунок балів</h4>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setIsBulkEditOpen(true)}
+                            >
+                              ⚡ Масове
+                            </Button>
+                          </div>
                           <p className="text-xs text-mindflow-slate mb-3">
                             Призначте бали для кожної шкали до кожного варіанту
                           </p>
@@ -915,6 +946,29 @@ export default function ProfessionalBuilderPage() {
 
       {/* AI Import Modal */}
       <AIImportModal isOpen={isAIModalOpen} onClose={() => setIsAIModalOpen(false)} />
+
+      {/* Bulk Edit Scores Modal */}
+      {selectedQuestion && (
+        <BulkEditScoresModal
+          isOpen={isBulkEditOpen}
+          onClose={() => setIsBulkEditOpen(false)}
+          question={selectedQuestion}
+          scales={scoringScales}
+          onApply={(updates) => {
+            const newOptions = [...(selectedQuestion.options || [])]
+            Object.entries(updates).forEach(([optionId, scaleScores]) => {
+              const optIndex = newOptions.findIndex((opt) => opt.id === optionId)
+              if (optIndex !== -1) {
+                newOptions[optIndex].scoreWeights = {
+                  ...(newOptions[optIndex].scoreWeights || {}),
+                  ...scaleScores,
+                }
+              }
+            })
+            updateQuestion(selectedQuestion.id, { options: newOptions })
+          }}
+        />
+      )}
     </div>
   )
 }

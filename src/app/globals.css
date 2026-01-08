@@ -64,6 +64,18 @@
     @apply shadow-glass-hover;
   }
 
+  /* Enhanced contrast for bright environments */
+  @media (prefers-contrast: high) or (min-width: 1024px) {
+    .glass-card {
+      @apply border-white/30;
+    }
+  }
+
+  /* Strong variant for critical UI elements */
+  .glass-card-strong {
+    @apply bg-white/70 backdrop-blur-2xl border border-white/30 shadow-glass-strong rounded-3xl;
+  }
+
   /* Primary Button - Apple Style */
   .btn-primary {
     @apply px-6 py-3 rounded-full bg-gradient-primary text-white font-medium;

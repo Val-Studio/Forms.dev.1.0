@@ -23,8 +23,9 @@ const config: Config = {
         'gradient-primary': 'linear-gradient(135deg, #5FB3B3 0%, #4A9D9D 100%)',
       },
       boxShadow: {
-        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
-        'glass-hover': '0 8px 32px 0 rgba(31, 38, 135, 0.12)',
+        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07), 0 2px 4px 0 rgba(0, 0, 0, 0.04)',
+        'glass-hover': '0 8px 32px 0 rgba(31, 38, 135, 0.12), 0 4px 8px 0 rgba(0, 0, 0, 0.06)',
+        'glass-strong': '0 12px 40px 0 rgba(31, 38, 135, 0.15), 0 4px 8px 0 rgba(0, 0, 0, 0.08)',
         'soft': '0 8px 30px rgb(0,0,0,0.04)',
         'soft-lg': '0 20px 60px rgb(0,0,0,0.06)',
       },

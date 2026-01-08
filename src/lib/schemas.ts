@@ -167,6 +167,16 @@ export const OptionSchema = z.object({
 // Питання (з усіма типами)
 // ============================================
 
+// Safety Trigger для критичних відповідей
+export const SafetyTriggerSchema = z.object({
+  id: z.string(),
+  optionId: z.string().optional(), // Якщо тригер спрацьовує на конкретний варіант
+  type: z.enum(['suicide_risk', 'self_harm', 'violence', 'severe_depression', 'psychosis', 'custom']),
+  severity: z.enum(['low', 'medium', 'high', 'critical']),
+  message: z.string(),
+  alertPsychologist: z.boolean().default(true),
+})
+
 export const QuestionSchema = z.object({
   id: z.string(),
   type: QuestionTypeEnum,
@@ -180,6 +190,9 @@ export const QuestionSchema = z.object({
 
   // Специфічні налаштування
   settings: z.any().optional(), // Буде типізовано залежно від type
+
+  // Safety Triggers для критичних відповідей
+  safetyTriggers: z.array(SafetyTriggerSchema).optional(),
 })
 
 // ============================================
@@ -256,6 +269,7 @@ export type Option = z.infer<typeof OptionSchema>
 export type ScoringScale = z.infer<typeof ScoringScaleSchema>
 export type LogicJump = z.infer<typeof LogicJumpSchema>
 export type Interpretation = z.infer<typeof InterpretationSchema>
+export type SafetyTrigger = z.infer<typeof SafetyTriggerSchema>
 
 // ============================================
 // AI Import JSON Schema

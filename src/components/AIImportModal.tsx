@@ -21,17 +21,92 @@ export function AIImportModal({ isOpen, onClose }: AIImportModalProps) {
   if (!isOpen) return null
 
   const handleValidate = () => {
+    setError(null)
+
+    if (!jsonInput.trim()) {
+      setError('Будь ласка, вставте JSON у поле вводу')
+      return
+    }
+
     try {
       const parsed = JSON.parse(jsonInput)
+
+      // Перевірка базових полів
+      if (!parsed.title) {
+        setError('❌ JSON не містить поле "title" (назва тесту)')
+        setPreview(null)
+        return
+      }
+
+      if (!parsed.scales || !Array.isArray(parsed.scales)) {
+        setError('❌ JSON не містить поле "scales" або воно не є масивом')
+        setPreview(null)
+        return
+      }
+
+      if (!parsed.questions || !Array.isArray(parsed.questions)) {
+        setError('❌ JSON не містить поле "questions" або воно не є масивом')
+        setPreview(null)
+        return
+      }
+
+      // Валідація через Zod schema
       const validated = AIImportSchema.parse(parsed)
+
+      // Додаткові перевірки
+      const warnings: string[] = []
+
+      if (validated.scales.length === 0) {
+        warnings.push('⚠️ Тест не має шкал підрахунку')
+      }
+
+      if (validated.questions.length === 0) {
+        warnings.push('⚠️ Тест не має питань')
+      }
+
+      // Перевірка чи всі питання мають options якщо це choice типи
+      validated.questions.forEach((q, index) => {
+        if (['single_choice', 'multiple_choice', 'dropdown'].includes(q.type)) {
+          if (!q.options || q.options.length === 0) {
+            warnings.push(`⚠️ Питання ${index + 1} типу "${q.type}" не має варіантів відповідей`)
+          }
+        }
+      })
+
       setPreview({
         scalesCount: validated.scales.length,
         questionsCount: validated.questions.length,
         title: validated.title,
+        warnings,
       })
       setError(null)
     } catch (err: any) {
-      setError(err.message || 'Невалідний JSON. Перевірте формат.')
+      // Розбір помилок JSON.parse
+      if (err instanceof SyntaxError) {
+        const match = err.message.match(/position (\d+)/)
+        if (match) {
+          const position = parseInt(match[1])
+          const lines = jsonInput.substring(0, position).split('\n')
+          setError(
+            `❌ Синтаксична помилка JSON на рядку ${lines.length}:\n${err.message}\n\nПеревірте коми, лапки та дужки.`
+          )
+        } else {
+          setError(`❌ Невалідний JSON: ${err.message}\n\nПеревірте формат JSON`)
+        }
+        setPreview(null)
+        return
+      }
+
+      // Розбір помилок Zod валідації
+      if (err.errors && Array.isArray(err.errors)) {
+        const errorMessages = err.errors.map((e: any) => {
+          const path = e.path.join(' → ')
+          return `• ${path}: ${e.message}`
+        })
+        setError(`❌ Помилки валідації:\n\n${errorMessages.join('\n')}\n\nВиправте помилки та спробуйте знову.`)
+      } else {
+        setError(`❌ Помилка: ${err.message || 'Невалідний JSON. Перевірте формат.'}`)
+      }
       setPreview(null)
     }
   }
@@ -123,22 +198,36 @@ export function AIImportModal({ isOpen, onClose }: AIImportModalProps) {
 
         {/* Preview */}
         {preview && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-2xl">
-            <h3 className="font-semibold text-green-900 mb-2">✅ JSON валідний!</h3>
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <p className="text-green-700">Назва:</p>
-                <p className="font-medium">{preview.title}</p>
-              </div>
-              <div>
-                <p className="text-green-700">Шкал:</p>
-                <p className="font-medium">{preview.scalesCount}</p>
-              </div>
-              <div>
-                <p className="text-green-700">Питань:</p>
-                <p className="font-medium">{preview.questionsCount}</p>
+          <div className="mt-4 space-y-3">
+            <div className="p-4 bg-green-50 border border-green-200 rounded-2xl">
+              <h3 className="font-semibold text-green-900 mb-3">✅ JSON валідний!</h3>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="text-green-700">Назва:</p>
+                  <p className="font-medium">{preview.title}</p>
+                </div>
+                <div>
+                  <p className="text-green-700">Шкал:</p>
+                  <p className="font-medium">{preview.scalesCount}</p>
+                </div>
+                <div>
+                  <p className="text-green-700">Питань:</p>
+                  <p className="font-medium">{preview.questionsCount}</p>
+                </div>
               </div>
             </div>
+
+            {/* Warnings */}
+            {preview.warnings && preview.warnings.length > 0 && (
+              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-2xl">
+                <h4 className="font-semibold text-yellow-900 mb-2">⚠️ Попередження:</h4>
+                <ul className="space-y-1 text-sm text-yellow-800">
+                  {preview.warnings.map((warning: string, index: number) => (
+                    <li key={index}>{warning}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
